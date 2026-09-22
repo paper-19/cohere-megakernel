@@ -851,7 +851,7 @@ struct MoeQueueTileScheduler {
         const int k_begin = split * k_per;
         const int k_end = min(k_begin + k_per, k_total);
         const int k_tiles = k_end - k_begin;
-       
+
         if (k_tiles <= 0) {
             #ifdef NMC_TRAP_ON_ERROR
             __trap();
@@ -1666,6 +1666,13 @@ __device__ void attn_decode(const NmcInstruction& inst, const NmcGlobals<Cfg>& g
         }
 
         if (!tile_active || local_count == 0) {
+            if constexpr (R == NmcRole::PRODUCER) {
+                if (lane_id() == 0 && layer > 0) {
+                    profiled_wait_cross_sm_indexed<Cfg>(
+                        g.bar_layer, layer, (uint32_t)g.BS, ops.profiler);
+                }
+            }
+            worker_sync<Cfg>();
             // The controller warp does not enter dispatch. Index from the first
             // worker thread so small arrays (notably hr <= 16 LSE values) are
             // not skipped by starting at absolute threadIdx.x == 32.
