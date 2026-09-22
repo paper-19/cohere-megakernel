@@ -476,6 +476,10 @@ struct NmcGlobals {
     uint32_t* attn_queue_heads;
     int attn_queue_len;
     int* attn_num_splits;  // (BS,), nullptr when drain is off
+    bf16* projection_capture_input;
+    bf16* projection_capture_output;
+    uint32_t* projection_capture_stamps;
+    uint32_t projection_capture_epoch;
 };
 
 // ── warp-role helpers ────────────────────────────────────────────────────────
@@ -2882,6 +2886,26 @@ __device__ void add_rmsnorm_op(const NmcInstruction& inst, const NmcGlobals<Cfg>
         bf16* x_ffn = g.x_ffn + (size_t)row * g.D;
         bf16* out = reinterpret_cast<bf16*>(g.x_resid.raw_ptr) + (size_t)row * g.D;
         const bf16* gamma = g.rmsnorm_gamma + (size_t)layer * g.D;
+
+        if(g.projection_capture_epoch != 0) {
+            const size_t slot = (size_t)layer * g.BS + row;
+            const int input_width = g.Hq * 128;
+            const bf16* input = reinterpret_cast<const bf16*>(g.o_proj_in.raw_ptr)
+                + (size_t)row * input_width;
+            bf16* saved_input = g.projection_capture_input + slot * input_width;
+            bf16* saved_output = g.projection_capture_output + slot * g.D;
+            for (int i = tid; i < input_width; i += num_consumer_threads) {
+                saved_input[i] = input[i];
+            }
+            for (int i = tid; i < g.D; i += num_consumer_threads) {
+                saved_output[i] = x_attn[i];
+            }
+            asm volatile("bar.sync %0, %1;\n" :: "r"(6), "r"(num_consumer_threads) : "memory");
+            if (tid == 0) {
+                g.projection_capture_stamps[slot] =
+                    (g.projection_capture_epoch << 8) | (uint32_t)(slot + 1);
+            }
+        }
 
         // NMC RMSNorm is fixed-width D=2048; each consumer thread owns one
         // uint4 containing eight bf16 values. The release model ABI also fixes

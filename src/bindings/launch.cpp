@@ -213,7 +213,9 @@ void bind_launch(nb::module_& m) {
             RW(D) RW(Dff) RW(Hq) RW(Hkv)
             RW(head_dim) RW(num_splits) RW(timing) RW(attn_queue_words)
             RW(attn_queue_heads) RW(attn_queue_len)
-            RW(attn_num_splits);
+            RW(attn_num_splits)
+            RW(projection_capture_input) RW(projection_capture_output)
+            RW(projection_capture_stamps) RW(projection_capture_epoch);
     }
 
     {

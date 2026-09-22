@@ -146,6 +146,10 @@ inline NmcGlobals<Cfg> make_nmc_globals(const NmcLaunchDesc* d) {
         (uint32_t*)d->attn_queue_heads,
         d->attn_queue_len,
         (int*)d->attn_num_splits,
+        (bf16*)d->projection_capture_input,
+        (bf16*)d->projection_capture_output,
+        (uint32_t*)d->projection_capture_stamps,
+        d->projection_capture_epoch,
     };
 }
 
