@@ -2224,6 +2224,7 @@ struct OProjPolicy {
     }
     static __device__ __forceinline__
     void signal_output_bar(const G& g, const NmcInstruction& inst) {
+        asm volatile("cp.async.bulk.wait_group 0;" ::: "memory");
         inst_arrive_out(g.bar_oproj, inst);
     }
 };
