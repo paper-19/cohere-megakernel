@@ -520,7 +520,7 @@ __device__ __forceinline__ bool any_active_row_in_tile(
 template <class Cfg>
 __device__ __forceinline__ void worker_sync() {
     constexpr int NW = Cfg::NUM_THREADS - 32;
-    asm volatile("bar.sync 1, %0;" :: "r"(NW) : "memory");
+    asm volatile("barrier.sync 1, %0;" :: "r"(NW) : "memory");
 }
 
 // ── TMA bulk-group store helpers ─────────────────────────────────────────────
