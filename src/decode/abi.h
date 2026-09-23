@@ -85,6 +85,9 @@ struct NmcLaunchDesc {
     // Zero (null) when drain is off. Appended after attn_queue_len so the
     // original field offsets are unchanged.
     uint64_t attn_num_splits;
+    uint64_t projection_capture_input, projection_capture_output;
+    uint64_t projection_capture_stamps;
+    uint64_t projection_capture_epoch;
 };
 
 // One context bucket: the instruction stream and kernel to use while the

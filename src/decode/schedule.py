@@ -170,6 +170,10 @@ def _build_launch_desc(
         "timing": 1,
         # Refreshed per step, or left 0 when the attention drain is off.
         "attn_queue_len": 0,
+        "projection_capture_input": 0,
+        "projection_capture_output": 0,
+        "projection_capture_stamps": 0,
+        "projection_capture_epoch": 0,
     }
     for name, value in scalars.items():
         setattr(desc, name, value)
